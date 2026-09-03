@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+
+# Local data / build artifacts
+data/
+*.sqlite
+*.sqlite3
+*.db
+
+# Env files
+.env
+.env.local
+.DS_Store
