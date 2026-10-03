@@ -14,6 +14,11 @@ export function createApp(overrides = {}) {
 
   const app = express();
   app.disable("x-powered-by");
+  if (config.isProduction) {
+    // Caddy terminates TLS. Without this, Secure cookies are never set
+    // and login appears to succeed then bounce back to the sign-in page.
+    app.set("trust proxy", 1);
+  }
   app.use(
     helmet({
       contentSecurityPolicy: false,

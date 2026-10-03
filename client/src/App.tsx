@@ -63,10 +63,28 @@ export default function App() {
   if (needsLogin) {
     return (
       <LoginScreen
-        onLoggedIn={(me) => {
+        notice={error}
+        onLoggedIn={async (me) => {
           setSession(me);
           setNeedsLogin(false);
-          refresh();
+          try {
+            const [s, c, i] = await Promise.all([
+              api.stats(),
+              api.customers(),
+              api.invoices(),
+            ]);
+            setStats(s);
+            setCustomers(c);
+            setInvoices(i);
+            setError(null);
+          } catch (e) {
+            if (e instanceof ApiError && e.status === 401) {
+              setNeedsLogin(true);
+              setError("Signed in, but the session cookie was not kept. Refresh after the server update.");
+              return;
+            }
+            setError((e as Error).message);
+          }
         }}
       />
     );
@@ -122,7 +140,13 @@ export default function App() {
   );
 }
 
-function LoginScreen({ onLoggedIn }: { onLoggedIn: (session: Session) => void }) {
+function LoginScreen({
+  onLoggedIn,
+  notice,
+}: {
+  onLoggedIn: (session: Session) => void | Promise<void>;
+  notice?: string | null;
+}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -155,7 +179,7 @@ function LoginScreen({ onLoggedIn }: { onLoggedIn: (session: Session) => void })
         </div>
         <h1>Sign in</h1>
         <p>Access is restricted. Use the credentials stored only on the server.</p>
-        {error && <div className="banner error">{error}</div>}
+        {(error || notice) && <div className="banner error">{error || notice}</div>}
         <label>
           Username
           <input
