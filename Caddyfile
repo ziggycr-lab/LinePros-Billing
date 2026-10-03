@@ -1,0 +1,3 @@
+billing.empyreancr.net {
+	reverse_proxy app:3000
+}

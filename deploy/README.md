@@ -144,15 +144,13 @@ docker compose up -d --build
 
 `.env` and the SQLite volume are not touched by `git pull`.
 
-## HTTPS (when you have a domain)
+## HTTPS (billing.empyreancr.net)
 
-Until HTTPS is on, the login password travels in cleartext over HTTP. Fine for a first smoke test from a trusted network; not fine for real billing data.
-
-When you have a domain pointing at the droplet:
-
-1. Put Caddy or nginx + Let's Encrypt in front.
-2. Set `LINEPROS_SECURE_COOKIES=true` in `.env`.
-3. `ufw allow 443/tcp` and `docker compose up -d`.
+1. Create a DNS **A** record: `billing.empyreancr.net` → the droplet public IPv4.
+2. `ufw allow 443/tcp`
+3. `docker compose up -d --build` (Caddy obtains a Let's Encrypt certificate).
+4. Set `LINEPROS_SECURE_COOKIES=true` in `.env` and `docker compose up -d --force-recreate`.
+5. Open `https://billing.empyreancr.net` only. Do not sign in over `http://` or the raw IP.
 
 ## What this setup deliberately does not do
 
