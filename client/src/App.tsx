@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  ApiError,
   api,
   money,
   type Customer,
   type Invoice,
   type LineItem,
+  type Session,
   type Stats,
 } from "./api";
 
@@ -18,6 +20,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("dashboard");
+  const [session, setSession] = useState<Session | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -31,13 +35,42 @@ export default function App() {
       setInvoices(i);
       setError(null);
     } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        setNeedsLogin(true);
+        return;
+      }
       setError((e as Error).message);
     }
   }
 
   useEffect(() => {
-    refresh();
+    api
+      .me()
+      .then((me) => {
+        setSession(me);
+        setNeedsLogin(false);
+        refresh();
+      })
+      .catch((e) => {
+        if (e instanceof ApiError && e.status === 401) {
+          setNeedsLogin(true);
+          return;
+        }
+        setError((e as Error).message);
+      });
   }, []);
+
+  if (needsLogin) {
+    return (
+      <LoginScreen
+        onLoggedIn={(me) => {
+          setSession(me);
+          setNeedsLogin(false);
+          refresh();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="app">
@@ -60,6 +93,18 @@ export default function App() {
             </button>
           ))}
         </nav>
+        {session?.auth && (
+          <button
+            className="nav-item logout"
+            onClick={async () => {
+              await api.logout().catch(() => undefined);
+              setNeedsLogin(true);
+              setSession(null);
+            }}
+          >
+            Sign out
+          </button>
+        )}
       </aside>
 
       <main className="content">
@@ -73,6 +118,67 @@ export default function App() {
           <Invoices invoices={invoices} customers={customers} onChange={refresh} />
         )}
       </main>
+    </div>
+  );
+}
+
+function LoginScreen({ onLoggedIn }: { onLoggedIn: (session: Session) => void }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const me = await api.login(username, password);
+      onLoggedIn(me);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+      setPassword("");
+    }
+  }
+
+  return (
+    <div className="login-shell">
+      <form className="login-card" onSubmit={submit}>
+        <div className="brand">
+          <span className="brand-mark">L</span>
+          <div>
+            <div className="brand-name">LinePros</div>
+            <div className="brand-sub">Billing</div>
+          </div>
+        </div>
+        <h1>Sign in</h1>
+        <p>Access is restricted. Use the credentials stored only on the server.</p>
+        {error && <div className="banner error">{error}</div>}
+        <label>
+          Username
+          <input
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        <button className="btn primary" disabled={busy}>
+          {busy ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
     </div>
   );
 }

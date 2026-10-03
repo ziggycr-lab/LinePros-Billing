@@ -42,19 +42,40 @@ export interface Stats {
   collected: number;
 }
 
+export interface Session {
+  username: string;
+  auth: boolean;
+}
+
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
+    credentials: "include",
     headers: { "content-type": "application/json" },
     ...options,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `Request failed: ${res.status}`);
+    throw new ApiError(res.status, body.error || `Request failed: ${res.status}`);
   }
   return res.json();
 }
 
 export const api = {
+  me: () => request<Session>("/api/me"),
+  login: (username: string, password: string) =>
+    request<Session>("/api/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+  logout: () => request<{ ok: boolean }>("/api/logout", { method: "POST" }),
   stats: () => request<Stats>("/api/stats"),
   customers: () => request<Customer[]>("/api/customers"),
   createCustomer: (data: { name: string; email: string; company?: string }) =>

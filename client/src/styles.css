@@ -40,6 +40,10 @@ body {
   gap: 28px;
 }
 
+.logout {
+  margin-top: auto;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -481,6 +485,34 @@ textarea:focus {
 
 .pay-row label {
   margin-bottom: 0;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+
+.login-card h1 {
+  margin: 20px 0 6px;
+  font-size: 22px;
+}
+
+.login-card > p {
+  color: var(--muted);
+  margin: 0 0 18px;
+  font-size: 14px;
 }
 
 @media (max-width: 900px) {

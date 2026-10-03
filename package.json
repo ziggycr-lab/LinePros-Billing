@@ -14,7 +14,8 @@
     "build": "npm run build -w client",
     "start": "npm run start -w server",
     "test": "npm run test -w server",
-    "seed": "npm run seed -w server"
+    "seed": "npm run seed -w server",
+    "hash-password": "node deploy/hash-password.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

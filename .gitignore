@@ -4,13 +4,33 @@ build/
 *.log
 npm-debug.log*
 
-# Local data / build artifacts
+# Local data / build artifacts — never commit the SQLite file
 data/
 *.sqlite
 *.sqlite3
 *.db
+*.db-wal
+*.db-shm
 
-# Env files
+# Secrets and local environment — never commit real values
 .env
-.env.local
+.env.*
+!.env.example
+!.env*.example
+
+# Keys, certificates, and cloud credentials
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.ppk
+credentials.json
+service-account*.json
+secrets/
+.do/
+.digitalocean/
+
 .DS_Store

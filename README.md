@@ -31,6 +31,21 @@ Then open http://localhost:5173.
 | `npm run build` | Build the client for production. |
 | `npm test` | Run the server API tests. |
 
+## Production deploy
+
+See [deploy/README.md](deploy/README.md). Summary:
+
+- One Docker container serves the UI and API.
+- Secrets live in a droplet-only `.env` (`chmod 600`). **Never commit `.env`.**
+- Generate `LINEPROS_ADMIN_PASSWORD_HASH` on your laptop with `node deploy/hash-password.mjs` so the plaintext password never touches the server.
+- Production refuses to start without a session secret and a password hash.
+
+## Security notes
+
+- Local `npm run dev` has auth **off** so development stays easy.
+- Production (`NODE_ENV=production`) has auth **on**. All `/api/*` routes except `/api/health`, `/api/login`, and `/api/logout` require a session cookie.
+- `.gitignore` excludes `.env`, SQLite files, keys, and credential JSON. Do not force-add those files.
+
 ## API overview
 
 | Method | Path | Description |
