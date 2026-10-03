@@ -1,0 +1,14 @@
+{
+  "name": "LinePros Billing",
+  "install": "npm install",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "npm run seed --silent; npm run dev"
+    }
+  ],
+  "ports": [
+    { "name": "client", "port": 5173 },
+    { "name": "api", "port": 4000 }
+  ]
+}

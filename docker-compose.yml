@@ -1,0 +1,43 @@
+# Secrets stay in `.env` (gitignored, chmod 600). Nothing secret belongs here.
+# Caddy terminates HTTPS and proxies to the app. The app is not published on a host port.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      LINEPROS_DB_PATH: /data/billing.db
+      LINEPROS_CLIENT_DIST: /app/client/dist
+    expose:
+      - "3000"
+    volumes:
+      - linepros-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  linepros-data:
+  caddy-data:
+  caddy-config:
